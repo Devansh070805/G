@@ -4,6 +4,242 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Google</title>
+    <title>// fixed point 
+tol = 0.001;
+f = input("Enter the given function f(x) = ");
+for i = 0:1:10
+    if(f(i) * f(i+1) < 0)
+        fprintf("root lies in [%f,%f] \n",i,i+1);
+        break
+    end
+end
+g = input("Enter Modified function g(x) = ");
+syms x;
+h = diff(g,x);
+
+for j = i : 0.001: i+1
+    if(abs(subs(h,j))) <= 1
+    else
+        fprintf("Function is not valid \n");
+        break;
+    end
+end
+d = input("Enter Initial Guess = ");
+
+for i = 1 : 1  : 100
+    c = g(d);
+    fprintf(" Iteration (%d) : x(%d) = %f \n",i,i,c);
+    
+    if abs(c-d)< tol
+        break
+        
+    end
+    d = c;
+end
+fprintf("Total no. of iterations are %d \n root is %f",i,c);
+
+
+
+
+
+//forward newton
+x_values = input("Enter X values as a vector");
+y_values = input("Enter y values as a vector");
+%number of data points
+n = length(x_values);
+
+h = x_values(2) - x_values(1);
+
+syms x;
+
+
+
+%Initialising the fowarard interpolation polynomial to y_0
+N_poly = y_values(1);
+diff_table = zeros(n,n);
+
+% first column of different table is y_values
+diff_table(:,1) = y_values(:);
+% filling the forward differences
+for j = 1: (n-1)
+    for i = 1:(n-j)
+        diff_table(i,j+1) = diff_table(i+1,j) - diff_table(i,j);
+    end
+end
+
+disp('The forward and backward table is')
+disp(diff_table);
+
+p = (x-x_values(1))/h;
+p_term = 1;
+
+for i = 1:(n-1)
+    p_term = p_term * p - (i-1);
+    N_poly = N_poly + (p_term/factorial(i))*diff_table(i,i+1);
+    
+end
+
+N_poly = simplify(N_poly);
+disp('Simplified Forward polynomial is');
+N_poly
+
+
+
+// jacbobian
+
+
+
+% user input for the number of variables and equations
+n_vars = input("Enter the number of variables");
+n_eqns = input("Enter the number of equations");
+
+%Dynamically creating symbolic variables
+vars = sym('x',[1 n_vars]);
+% Input the equations from the user
+f = sym('f',[1 n_eqns]);
+for i = 1 : n_eqns
+    fun = input(['Equation',num2str(i),':'],'s');
+    f(i) = str2sym(fun);
+end
+
+%Initial guess
+x = zeros(1,n_vars);
+for i = 1 : n_vars
+    x(i) = input(['Enter the initial guess of variables x',num2str(i),': ']);
+    
+    
+end
+
+e = 1e-8;
+% Compute the Jacobian matrix
+J = jacobian(f,vars);
+
+for i = 1:100
+    % Evalute the function and Jacobian at the current value of x
+    F = double(subs(f,vars,num2cell(x)));
+    J_eval = double(subs(J,vars,num2cell(x)));
+    y = -inv(J_eval) * F';
+    x = x + y';
+    if norm(y) < e
+        break;
+    end
+    
+end
+fprintf("\n The Solution is : ");
+disp(x);
+
+
+// lagrange
+
+
+% Input known data points
+x_values = input('Enter the x values as vector');
+y_values = input('Enter the y values as vector');
+
+n = length(x_values);
+%Symbolic variable for constructing the polynomial
+syms x;
+L_poly = 0;
+a_values = sym(zeros(1,n));
+
+for i = 1:n
+    a_i = 1;
+    for j = 1:n
+        if j ~= i
+            a_i = a_i  * (x-x_values(j))/(x_values(i)-x_values(j));
+        end
+    end
+    a_values(i) = a_i;
+    L_poly = L_poly + a_i*y_values(i);
+end
+L_poly = simplify(L_poly);
+fprintf("Simplified Langrange polynomial is : \n");
+disp(L_poly);
+
+
+// gauss_seidel
+
+f = input("Enter The Function \n");
+a = input("Enter lower limit \n");
+b = input("Enter upper limit \n");
+if a == -1 && b == 1
+    f_u = f;
+else
+    f_u = @(u)(f(0.5*(b-a)*u + 0.5 *(b+a))*0.5 * (b-a));
+end
+n = input("Enter the value on n : \n");
+if n == 2
+    integration = f_u(-1/sqrt(3)) + f_u(1/sqrt(3));
+elseif n == 3
+    integration = 5/9*f_u(-sqrt(3/5)) + 8/9*f_u(0) + 5/9*f_u(sqrt(3/5));
+end
+integration
+
+
+// gauss elimination
+
+
+% Input A and B
+A = input("Enter A (as a matrix): ");
+B = input("Enter B (as a column vector): ");
+
+n = length(B);
+AB = [A B];  % Augmented matrix [A|B]
+
+% Pivoting
+for i = 1 : n-1
+    [~, maxIndex] = max(abs(AB(i:n,i))); % Find the max element in the column
+    maxIndex = maxIndex + i - 1;  % Adjust index to match the full range
+    if maxIndex ~= i
+        AB([i, maxIndex], :) = AB([maxIndex, i], :);  % Swap rows
+    end
+end
+
+disp("Matrix after pivoting:");
+disp(AB);
+
+% Gaussian elimination
+for i = 1 : n-1
+    for j = i+1 : n
+        factor = AB(j, i) / AB(i, i);  % Use AB(i,i) for the pivot
+        AB(j, i:n+1) = AB(j, i:n+1) - factor * AB(i, i:n+1);  % Eliminate variable
+    end
+end
+
+disp("Matrix after Gaussian elimination:");
+disp(AB);
+
+% Backward substitution
+X = zeros(n, 1);  % Solution vector
+
+X(n) = AB(n, end) / AB(n, n);  % Solve for the last variable
+
+for i = n-1 : -1 : 1
+    X(i) = (AB(i, end) - AB(i, i+1:n) * X(i+1:n)) / AB(i, i);
+end
+
+disp("Solution vector X:");
+disp(X);
+
+
+//gauss seidel
+
+
+A = input("Enter Coefficient Matrix\n");
+B = input("Enter B");
+P = input("Enter Initial Guess");
+n = input("Enter number of iterations")
+N = length(B);
+X = zeros(N,1);
+
+for j = 1:n
+    for i = 1:N
+        X(i) = (B(i)/A(i,i)) - (A(i,[1:i-1,i+1:N])*P([1:i-1,i+1:N]))/A(i,i);
+        P(i) = X(i);
+    end
+    
+end
+</title>
     <link rel="stylesheet" href="style.css">
     <script src="script.js"></script>
     <link rel="shortcut icon" href="favicon_logo.png" type="image/png">
